@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>우리반 자리뽑기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Jua&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<style>
+/* Layout: settings rail on the left, classroom stage (chalkboard + desk grid) on the right */
+:root{
+  --bg:#e8ebe3; --surface:#fafbf7; --surface-2:#f0f2eb; --ink:#1d2721; --muted:#59665d; --line:#d0d7c9;
+  --board:#26392f; --board-2:#304639; --board-ink:#eef0e6;
+  --chalk-y:#f3d46a; --chalk-p:#f2a0ad; --chalk-b:#94cbe8; --chalk-g:#a3dbb7;
+  --wood:#d9b17c; --wood-top:#e8c896; --wood-edge:#ad814a; --wood-ink:#33240e; --chair:#8b9a90;
+  --floor:#f3f4ee; --floor-line:#e6e9df;
+  --accent:#2f6b4f; --accent-soft:#dcebe2; --accent-ink:#ffffff;
+  --danger:#b8453a; --warn:#9a6210; --window:#b9d6e8; --sel:#d9467e;
+  --f-display:"Jua","Black Han Sans","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-chalk:"Nanum Pen Script","Jua","Malgun Gothic",cursive;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111714; --surface:#19211c; --surface-2:#212a24; --ink:#e4e9e1; --muted:#9ba79f; --line:#2f3a33;
+    --board:#1c2d24; --board-2:#26392e;
+    --wood:#c99f69; --wood-top:#d8b27e; --wood-edge:#8f6536; --wood-ink:#271a07; --chair:#56655c;
+    --floor:#161d19; --floor-line:#1d2520;
+    --accent:#7cc39c; --accent-soft:#223a2d; --accent-ink:#0e1712;
+    --danger:#e57b6e; --warn:#e3a94a; --window:#355062; --sel:#f07aa6;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111714; --surface:#19211c; --surface-2:#212a24; --ink:#e4e9e1; --muted:#9ba79f; --line:#2f3a33;
+  --board:#1c2d24; --board-2:#26392e;
+  --wood:#c99f69; --wood-top:#d8b27e; --wood-edge:#8f6536; --wood-ink:#271a07; --chair:#56655c;
+  --floor:#161d19; --floor-line:#1d2520;
+  --accent:#7cc39c; --accent-soft:#223a2d; --accent-ink:#0e1712;
+  --danger:#e57b6e; --warn:#e3a94a; --window:#355062; --sel:#f07aa6;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* ---------- top bar ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--surface)}
+.brand{display:flex;align-items:baseline;gap:10px;min-width:0}
+.brand b{font-family:var(--f-display);font-size:24px;font-weight:400;letter-spacing:-.01em}
+.brand b em{font-style:normal;color:var(--accent)}
+.brand span{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;font-size:14px;font-weight:500;line-height:1.2;transition:background .15s,border-color .15s,transform .1s}
+.btn:hover{background:var(--surface-2)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,var(--line))}
+.btn.sm{padding:5px 9px;font-size:13px}
+.btn svg{width:16px;height:16px;flex:none}
+
+/* ---------- layout ---------- */
+.app{display:grid;grid-template-columns:330px minmax(0,1fr);gap:20px;padding:20px;max-width:1500px;margin:0 auto}
+@media (max-width:980px){.app{grid-template-columns:minmax(0,1fr);padding:16px}.stage{order:-1}}
+@media (max-width:640px){.brand span{display:none}.topbar{padding:10px 16px}}
+.side{display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.panel h2{margin:0 0 12px;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.panel h2 .step{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:12px;font-family:var(--f-display);font-weight:400}
+.panel h2 .aside{margin-left:auto;font-weight:500;font-size:12px;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field:last-child{margin-bottom:0}
+.field label,.lbl{font-size:13px;font-weight:600;color:var(--muted)}
+.hint{font-size:12.5px;color:var(--muted);margin:4px 0 0}
+.input{width:100%;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:8px 10px;font-size:14px}
+.input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.drop{border:2px dashed var(--line);border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:var(--surface-2);transition:border-color .15s,background .15s;margin-bottom:12px}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop strong{display:block;font-size:14px}
+.drop small{color:var(--muted);font-size:12.5px}
+
+.stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.stepper button{border:0;background:transparent;width:34px;height:36px;font-size:18px;line-height:1}
+.stepper button:hover{background:var(--line)}
+.stepper output{flex:1;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.seg button{flex:1;border:0;background:transparent;padding:8px 4px;font-size:13px;font-weight:500;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.check{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.check input{width:17px;height:17px;accent-color:var(--accent)}
+
+.roster{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 8px;max-height:300px;overflow:auto;padding-right:4px;margin-top:4px}
+.rrow{display:flex;align-items:center;gap:6px;min-width:0}
+.rnum{flex:none;width:34px;height:30px;border-radius:6px;border:1px solid var(--line);background:var(--surface-2);font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}
+.rnum:hover{border-color:var(--danger)}
+.rrow input{min-width:0;flex:1;border:1px solid transparent;background:transparent;border-radius:6px;padding:4px 6px;font-size:13.5px}
+.rrow input:hover{border-color:var(--line)}
+.rrow input:focus{border-color:var(--accent);outline:none;background:var(--surface-2)}
+.rrow.ex .rnum{text-decoration:line-through;color:var(--danger);border-style:dashed;background:transparent}
+.rrow.ex input{opacity:.4;text-decoration:line-through}
+
+.statline{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.pill.ok{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.pill.bad{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 50%,var(--line))}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:13px;padding:3px 6px 3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line))}
+.chip button{border:0;background:transparent;width:20px;height:20px;border-radius:50%;line-height:1;color:var(--muted)}
+.chip button:hover{background:var(--line);color:var(--ink)}
+.help{font-size:13px;color:var(--muted);line-height:1.65}
+.help b{color:var(--ink)}
+.help ol{margin:0;padding-left:18px}
+
+/* ---------- stage ---------- */
+.stage{display:flex;flex-direction:column;gap:14px;min-width:0}
+.stage:fullscreen{background:var(--bg);padding:20px;overflow:auto}
+
+.board{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;background:radial-gradient(120% 140% at 30% 20%,var(--board-2),var(--board));color:var(--board-ink);border-radius:14px;padding:20px 24px;border:10px solid #8a6a43;box-shadow:inset 0 0 40px rgba(0,0,0,.35),0 2px 0 #6c5132}
+.board::after{content:"";position:absolute;left:12%;right:12%;bottom:-10px;height:7px;background:#6c5132;border-radius:0 0 4px 4px}
+@media (max-width:640px){.board{grid-template-columns:minmax(0,1fr);padding:16px;border-width:7px}}
+.board-title{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.board-title input{font-family:var(--f-display);font-size:clamp(26px,3.4vw,40px);background:transparent;border:0;border-bottom:2px dashed transparent;color:var(--board-ink);padding:0;width:auto;min-width:4ch;max-width:100%;field-sizing:content}
+.board-title input:hover,.board-title input:focus{border-bottom-color:rgba(238,240,230,.4);outline:none}
+.board-title small{font-family:var(--f-chalk);font-size:24px;color:var(--chalk-y)}
+.board-msg{font-family:var(--f-chalk);font-size:clamp(24px,2.6vw,32px);line-height:1.25;margin:6px 0 2px;min-height:1.25em;text-wrap:balance}
+.board-sub{font-size:14px;color:rgba(238,240,230,.75);min-height:1.5em}
+.board-sub b{color:var(--chalk-y);font-weight:700}
+.board-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;align-items:center}
+.draw-btn{font-family:var(--f-display);font-size:24px;padding:12px 26px;border-radius:12px;border:0;background:var(--chalk-y);color:#2b2405;box-shadow:0 4px 0 #b39532,0 8px 20px rgba(0,0,0,.3);transition:transform .1s,box-shadow .1s}
+.draw-btn:hover{transform:translateY(-1px)}
+.draw-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #b39532}
+.draw-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.chalk-btn{border:1.5px solid rgba(238,240,230,.45);background:transparent;color:var(--board-ink);border-radius:10px;padding:9px 14px;font-weight:600;font-size:14px}
+.chalk-btn:hover{background:rgba(238,240,230,.1)}
+.chalk-btn:disabled{opacity:.4;cursor:not-allowed}
+.drum-wrap{position:relative;width:210px;height:210px;margin-bottom:22px}
+@media (max-width:640px){.drum-wrap{width:170px;height:170px;margin:0 auto}}
+#drum{width:100%;height:100%;display:block}
+.drum-label{position:absolute;bottom:-26px;left:0;right:0;text-align:center;font-family:var(--f-chalk);font-size:19px;color:rgba(238,240,230,.7)}
+.stamp{position:absolute;top:12px;right:250px;font-family:var(--f-display);font-size:22px;color:var(--chalk-p);border:3px solid var(--chalk-p);border-radius:8px;padding:2px 12px;transform:rotate(-8deg);opacity:.9;pointer-events:none}
+@media (max-width:640px){.stamp{right:14px}}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px;flex-wrap:wrap}
+.tabs button{border:0;background:transparent;border-radius:7px;padding:7px 12px;font-size:14px;font-weight:600;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+
+.notice{border-radius:10px;padding:10px 14px;font-size:14px;border:1px solid var(--line);background:var(--surface);display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.notice.sel{border-color:var(--sel);box-shadow:0 0 0 3px color-mix(in srgb,var(--sel) 15%,transparent)}
+.notice .grow{flex:1;min-width:180px}
+.notice select{max-width:200px}
+.tray{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tray .lbl{margin-right:4px}
+.tchip{border:1px solid var(--wood-edge);background:var(--wood-top);color:var(--wood-ink);border-radius:7px;padding:4px 10px;font-weight:600;font-size:13.5px;touch-action:none}
+.tchip.sel{outline:3px solid var(--sel)}
+
+/* ---------- classroom ---------- */
+.room{position:relative;background:var(--floor);background-image:linear-gradient(var(--floor-line) 1px,transparent 1px),linear-gradient(90deg,var(--floor-line) 1px,transparent 1px);background-size:44px 44px;border:1px solid var(--line);border-radius:14px;padding:18px 22px 22px;overflow-x:auto}
+.room.win-left{padding-left:44px}
+.room.win-right{padding-right:44px}
+.window{position:absolute;top:18px;bottom:18px;width:14px;border-radius:4px;background:repeating-linear-gradient(180deg,var(--window) 0 54px,var(--line) 54px 60px)}
+.window span{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);writing-mode:vertical-rl;font-size:12px;font-weight:700;color:var(--muted);background:var(--floor);padding:6px 1px;letter-spacing:.3em}
+.room.win-left .window{left:14px}
+.room.win-right .window{right:14px}
+.podium{margin:4px auto 18px;width:min(240px,40%);height:40px;border-radius:8px;background:linear-gradient(var(--wood),var(--wood-edge));color:var(--wood-ink);display:grid;place-items:center;font-family:var(--f-display);font-size:18px;box-shadow:0 3px 0 color-mix(in srgb,var(--wood-edge) 70%,#000)}
+.room.teacher .podium{margin:18px auto 4px}
+.grid{display:grid;column-gap:4px;row-gap:calc(var(--dh) * .42);justify-content:center;align-items:start;margin:0 auto;width:max-content}
+.room.teacher .grid{row-gap:calc(var(--dh) * .42)}
+.glabel,.rlabel{font-size:12px;font-weight:700;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.glabel{padding-bottom:2px}
+.rlabel{align-self:center;padding-right:6px;text-align:right}
+.rlabel.front{color:var(--accent)}
+
+.desk{position:relative;width:var(--dw);height:var(--dh);border-radius:6px;background:linear-gradient(175deg,var(--wood-top),var(--wood));border:1px solid var(--wood-edge);box-shadow:0 3px 0 var(--wood-edge),0 7px 10px -5px rgba(0,0,0,.35);color:var(--wood-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;user-select:none;-webkit-user-select:none;transition:transform .15s ease,opacity .2s;padding:2px 3px;text-align:center}
+.desk::after{content:"";position:absolute;left:50%;transform:translateX(-50%);width:44%;height:calc(var(--dh) * .2);background:var(--chair);border-radius:0 0 9px 9px;bottom:calc(var(--dh) * -.3);pointer-events:none}
+.room.teacher .desk::after{bottom:auto;top:calc(var(--dh) * -.3);border-radius:9px 9px 0 0}
+.desk:hover{transform:translateY(-2px)}
+.desk .num{font-family:var(--f-display);font-size:calc(var(--dw) * .3);line-height:1;font-variant-numeric:tabular-nums}
+.desk .nm{font-size:clamp(11px,calc(var(--dw) * .15),17px);font-weight:700;line-height:1.1;word-break:keep-all;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:100%}
+.desk .nm.long{font-size:clamp(10px,calc(var(--dw) * .105),13px);-webkit-line-clamp:2}
+.desk .faint{font-size:12px;opacity:.55;font-weight:600}
+.desk .tag{position:absolute;top:-8px;right:-6px;font-size:10.5px;font-weight:700;background:var(--sel);color:#fff;border-radius:999px;padding:1px 6px;line-height:1.4;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.desk.empty{opacity:.55;filter:saturate(.6)}
+.desk.empty .faint{opacity:.8}
+.room.mode-layout .desk.empty{opacity:1;filter:none}
+.desk.blank{opacity:.82}
+.desk.off{visibility:hidden}
+.room.mode-layout .desk.off{visibility:visible;background:transparent;border:2px dashed var(--muted);box-shadow:none;opacity:.55}
+.room.mode-layout .desk.off::after{display:none}
+.room.mode-layout .desk.off .addmark{display:flex;flex-direction:column;align-items:center;color:var(--muted);font-size:12px;font-weight:700;line-height:1.2}
+.room.mode-layout .desk.off .addmark b{font-size:22px;font-weight:400}
+.room.mode-layout .desk:not(.off):hover{outline:2px solid var(--danger);outline-offset:2px}
+.room.mode-layout .desk.off:hover{border-color:var(--accent);opacity:.9}
+.room.mode-layout .desk{cursor:cell}
+.room.mode-seat .desk{touch-action:none}
+.desk.sel{outline:3px solid var(--sel);outline-offset:2px;transform:translateY(-3px)}
+.desk.target{outline:3px dashed var(--accent);outline-offset:3px;transform:scale(1.05)}
+.desk.dragging{opacity:.3}
+.desk.dim{opacity:.38}
+.room.mode-wish .desk.front{outline:2px solid var(--sel);outline-offset:2px}
+.pin-in{width:72%;max-width:70px;text-align:center;border:1.5px solid var(--wood-edge);border-radius:6px;background:rgba(255,255,255,.75);color:#2a1d0a;font-family:var(--f-display);font-size:calc(var(--dw) * .2);padding:1px 2px;-moz-appearance:textfield}
+.pin-in::-webkit-outer-spin-button,.pin-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.desk .wl{font-size:11px;font-weight:700;color:var(--sel)}
+.desk.pending .num{animation:wobble .5s ease-in-out infinite;display:inline-block}
+.desk.pending{background:linear-gradient(175deg,var(--wood),var(--wood-edge))}
+.desk.pop{animation:pop .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes wobble{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+@keyframes pop{0%{transform:scale(.6) rotateY(90deg)}60%{transform:scale(1.15) rotateY(0)}100%{transform:scale(1)}}
+.ghost{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-55%) rotate(-5deg) scale(1.08);box-shadow:0 14px 28px rgba(0,0,0,.35)!important;opacity:.95}
+
+.fortune h3{margin:0 0 10px;font-size:17px;font-family:var(--f-display);font-weight:400}
+.fcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.fcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.fcard .eyebrow{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--accent)}
+.fcard .who{font-family:var(--f-display);font-size:21px;line-height:1.2}
+.fcard .where{font-size:12.5px;color:var(--muted);font-weight:600}
+.fcard p{margin:2px 0 0;font-size:13.5px;color:var(--muted)}
+
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:10px;font-size:14px;font-weight:500;opacity:0;transition:opacity .2s,transform .2s;z-index:80;max-width:calc(100vw - 32px);text-align:center;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{background:var(--danger);color:#fff}
+#confetti{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:70}
+.busy .side,.busy .tabs,.busy .tools{pointer-events:none;opacity:.55}
+footer.foot{text-align:center;font-size:12px;color:var(--muted);padding:6px 16px 24px}
+
+/* ---------- print sheet ---------- */
+#printSheet{position:fixed;left:-20000px;top:0;width:1060px;height:725px;background:#fff;color:#111;font-family:var(--f-body);padding:18px 24px;display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ps-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #222;padding-bottom:8px;margin-bottom:10px}
+.ps-title{font-family:var(--f-display);font-size:30px;line-height:1.1}
+.ps-sub{font-size:13px;color:#555;margin-top:4px}
+.ps-date{font-size:14px;color:#333;text-align:right}
+.ps-confirm{display:inline-block;border:2.5px solid #c0392b;color:#c0392b;font-family:var(--f-display);font-size:17px;padding:0 10px;border-radius:6px;transform:rotate(-6deg);margin-left:10px}
+.ps-body{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative}
+.ps-podium{margin:6px auto;width:200px;height:30px;border:2px solid #333;border-radius:6px;display:grid;place-items:center;font-family:var(--f-display);font-size:16px;background:#f1e4cf}
+.ps-grid{display:grid;justify-content:center;column-gap:4px;margin:8px auto}
+.ps-desk{border:1.6px solid #333;border-radius:6px;background:#fbf4e6;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2px}
+.ps-desk .n{font-family:var(--f-display);line-height:1}
+.ps-desk .m{font-weight:700;line-height:1.1;word-break:keep-all;overflow-wrap:anywhere}
+.ps-desk.e{border-style:dashed;background:#fff;color:#999}
+.ps-desk.o{visibility:hidden}
+.ps-gl{font-size:12px;color:#555;text-align:center;font-weight:700}
+.ps-win{position:absolute;top:0;bottom:0;width:10px;border:1.5px solid #6a8ca3;background:#e1eef6;border-radius:3px}
+.ps-foot{font-size:11.5px;color:#666;display:flex;justify-content:space-between;border-top:1px solid #bbb;padding-top:6px}
+
+@media print{
+  @page{size:A4 landscape;margin:8mm}
+  html,body{background:#fff!important}
+  body>*:not(#printSheet){display:none!important}
+  #printSheet{position:static;left:auto}
+}
+@media (prefers-reduced-motion: reduce){
+  .desk.pending .num,.desk.pop{animation:none}
+  *{transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><b>우리반 <em>자리뽑기</em></b><span>공정한 추첨기 · 선생님은 결백합니다</span></div>
+  <div class="top-actions">
+    <button class="btn sm" id="soundBtn" type="button" aria-pressed="true">소리 켜짐</button>
+    <button class="btn sm" id="fsBtn" type="button">전체화면</button>
+    <button class="btn sm danger" id="resetBtn" type="button">모두 초기화</button>
+  </div>
+</header>
+
+<div class="app" id="app">
+  <aside class="side">
+    <section class="panel" aria-labelledby="h1">
+      <h2 id="h1"><span class="step">1</span>학생 명단 <span class="aside" id="rosterCount"></span></h2>
+      <div class="drop" id="drop" role="button" tabindex="0">
+        <strong>출석부 엑셀 불러오기</strong>
+        <small>파일을 끌어다 놓거나 눌러서 선택 (.xlsx · .xls · .csv)</small>
+      </div>
+      <input type="file" id="fileIn" accept=".xlsx,.xls,.csv" hidden>
+      <div class="row2">
+        <div class="field">
+          <span class="lbl">총 인원 (마지막 번호)</span>
+          <div class="stepper"><button type="button" data-step="total" data-d="-1" aria-label="인원 줄이기">−</button><output id="totalOut"></output><button type="button" data-step="total" data-d="1" aria-label="인원 늘리기">+</button></div>
+                  </div>
+        <div class="field">
+          <label for="exIn">없는 번호</label>
+          <input class="input" id="exIn" placeholder="예: 21, 25 또는 21~25" autocomplete="off">
+        </div>
+      </div>
+      <p class="hint">번호를 누르면 제외/포함이 바뀌어요. 이름은 바로 고쳐 쓸 수 있어요.</p>
+      <div class="roster" id="roster"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="h2">
+      <h2 id="h2"><span class="step">2</span>책상 배치</h2>
+      <div class="row2">
+        <div class="field">
+          <span class="lbl">줄 (앞→뒤)</span>
+          <div class="stepper"><button type="button" data-step="rows" data-d="-1" aria-label="줄 줄이기">−</button><output id="rowsOut"></output><button type="button" data-step="rows" data-d="1" aria-label="줄 늘리기">+</button></div>
+        </div>
+        <div class="field">
+          <span class="lbl">분단 (좌→우)</span>
+          <div class="stepper"><button type="button" data-step="groups" data-d="-1" aria-label="분단 줄이기">−</button><output id="groupsOut"></output><button type="button" data-step="groups" data-d="1" aria-label="분단 늘리기">+</button></div>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lbl">짝</span>
+        <div class="seg" id="perSeg">
+          <button type="button" data-v="1">혼자 앉기</button>
+          <button type="button" data-v="2">2인 짝</button>
+          <button type="button" data-v="3">3인 모둠</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lbl">창문 위치 (학생 시점)</span>
+        <div class="seg" id="winSeg">
+          <button type="button" data-v="left">왼쪽</button>
+          <button type="button" data-v="right">오른쪽</button>
+          <button type="button" data-v="none">표시 안 함</button>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="emptyBack"> 빈자리는 뒷줄로 몰기</label>
+      <div class="statline" id="seatStats"></div>
+      <p class="hint">특정 책상을 없애거나 되살리려면 오른쪽 <b>책상 편집</b> 탭에서 책상을 누르세요.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="h3">
+      <h2 id="h3"><span class="step">3</span>앞 두 줄 희망</h2>
+      <div class="field">
+        <label for="wishIn">앞 두 줄 희망 번호</label>
+        <input class="input" id="wishIn" placeholder="예: 3, 12, 27" autocomplete="off" inputmode="numeric">
+        <p class="hint">적은 번호는 앞 두 줄 안에서 무작위로 배정돼요.</p>
+        <div class="chips" id="wishChips"></div>
+      </div>
+      <div class="field">
+        <span class="lbl">자리 지정 (책상에 직접 적기)</span>
+        <p class="hint" style="margin-top:0">오른쪽 <b>앞자리 희망 적기</b> 탭에서 앞 두 줄 책상에 번호를 적으면 그 자리에 고정돼요.</p>
+        <div class="chips" id="pinChips"></div>
+      </div>
+    </section>
+
+    <section class="panel help">
+      <ol>
+        <li>출석부를 불러오거나 총 인원과 없는 번호를 정해요.</li>
+        <li><b>자리 뽑기!</b>를 누르면 추첨이 시작돼요. 다시 누르면 새로 뽑아요.</li>
+        <li>책상을 끌어 놓거나, 두 책상을 차례로 눌러 자리를 바꿔요.</li>
+        <li><b>확정하기</b> 후 <b>PDF 저장</b> 또는 <b>인쇄</b>를 눌러요.</li>
+      </ol>
+    </section>
+  </aside>
+
+  <main class="stage" id="stage">
+    <section class="board" aria-label="칠판">
+      <div style="min-width:0">
+        <div class="board-title"><input id="titleIn" aria-label="학급 이름" maxlength="20"><small>자리 뽑기</small></div>
+        <p class="board-msg" id="boardMsg"></p>
+        <div class="board-sub" id="boardSub"></div>
+        <div class="board-actions">
+          <button class="draw-btn" id="drawBtn" type="button">자리 뽑기!</button>
+          <button class="chalk-btn" id="skipBtn" type="button" hidden>결과 바로 보기</button>
+          <button class="chalk-btn" id="lockBtn" type="button">확정하기</button>
+        </div>
+      </div>
+      <div class="drum-wrap" aria-hidden="true"><canvas id="drum"></canvas><div class="drum-label">공정 추첨기 1호</div></div>
+      <div class="stamp" id="stamp" hidden>확정!</div>
+    </section>
+
+    <div class="toolbar">
+      <div class="tabs" role="tablist" id="tabs">
+        <button type="button" role="tab" data-mode="seat" aria-selected="true">자리 보기·바꾸기</button>
+        <button type="button" role="tab" data-mode="layout" aria-selected="false">책상 편집</button>
+        <button type="button" role="tab" data-mode="wish" aria-selected="false">앞자리 희망 적기</button>
+      </div>
+      <div class="tools">
+        <div class="seg" id="viewSeg" style="min-width:170px">
+          <button type="button" data-v="student">학생 시점</button>
+          <button type="button" data-v="teacher">교사 시점</button>
+        </div>
+        <button class="btn" id="undoBtn" type="button" title="Ctrl+Z">되돌리기</button>
+        <button class="btn" id="printBtn" type="button">인쇄</button>
+        <button class="btn primary" id="pdfBtn" type="button">PDF 저장</button>
+      </div>
+    </div>
+
+    <div class="notice" id="modeNote" hidden></div>
+    <div class="notice sel" id="selBar" hidden></div>
+    <div class="notice" id="trayBar" hidden></div>
+
+    <section class="room mode-seat" id="room" aria-label="교실 책상 배치"></section>
+
+    <section class="fortune" id="fortune" hidden>
+      <h3>오늘의 자리 운세</h3>
+      <div class="fcards" id="fcards"></div>
+    </section>
+  </main>
+</div>
+<footer class="foot">모든 자료는 이 컴퓨터의 브라우저에만 저장돼요. 결과에 대한 항의는 추첨기에게 해 주세요.</footer>
+
+<div id="printSheet" aria-hidden="true"></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const STORE='wooriban-seat-draw-v1';
+const REDUCED=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ---------------- state ---------------- */
+const defaults=()=>({title:'우리 반',total:30,excluded:[],names:{},rows:6,groups:3,per:2,windowSide:'left',disabled:[],pins:{},wish:[],assign:null,locked:false,view:'student',emptyBack:true,drawnAt:null});
+let S=(()=>{try{const v=JSON.parse(localStorage.getItem(STORE));if(v&&typeof v==='object')return Object.assign(defaults(),v)}catch(e){}return defaults()})();
+const save=()=>{try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}};
+let mode='seat', selected=null, animating=false, pending=new Set(), undoStack=[];
+
+const cols=()=>S.groups*S.per;
+const keyOf=(r,c)=>r+'-'+c;
+const parseKey=k=>k.split('-').map(Number);
+const rowOf=k=>parseKey(k)[0];
+const groupOf=c=>Math.floor(c/S.per);
+const isOff=k=>S.disabled.includes(k);
+function allKeys(){const out=[];for(let r=0;r<S.rows;r++)for(let c=0;c<cols();c++)out.push(keyOf(r,c));return out}
+const enabledKeys=()=>allKeys().filter(k=>!isOff(k));
+function students(){const ex=new Set(S.excluded),out=[];for(let n=1;n<=S.total;n++)if(!ex.has(n))out.push({num:n,name:(S.names[n]||'').trim()});return out}
+const studentSet=()=>new Set(students().map(s=>s.num));
+const nameOf=n=>(S.names[n]||'').trim();
+const who=n=>n+'번'+(nameOf(n)?' '+nameOf(n):'');
+function seatDesc(k){const [r,c]=parseKey(k);let s=(groupOf(c)+1)+'분단 '+(r+1)+'째 줄';if(S.per>1){const p=c%S.per;s+=S.per===2?(p===0?' 왼쪽':' 오른쪽'):(['왼쪽','가운데','오른쪽'][p])}return s}
+function seatOf(n){if(!S.assign)return null;for(const k in S.assign)if(S.assign[k]===n)return k;return null}
+
+function sanitize(){
+  const set=studentSet(), keys=new Set(allKeys());
+  S.excluded=[...new Set(S.excluded)].filter(n=>n>=1&&n<=S.total).sort((a,b)=>a-b);
+  S.disabled=S.disabled.filter(k=>keys.has(k));
+  for(const k in S.pins){const n=S.pins[k];if(!keys.has(k)||isOff(k)||rowOf(k)>=2||!set.has(n))delete S.pins[k]}
+  S.wish=[...new Set(S.wish)].filter(n=>set.has(n));
+  if(S.assign){const seen=new Set();for(const k in S.assign){const n=S.assign[k];if(!keys.has(k)||isOff(k)||!set.has(n)||seen.has(n))delete S.assign[k];else seen.add(n)}}
+}
+function pushUndo(){undoStack.push(JSON.stringify(S.assign));if(undoStack.length>60)undoStack.shift();updateUndo()}
+function updateUndo(){$('#undoBtn').disabled=!undoStack.length||S.locked}
+
+/* ---------------- humor ---------------- */
+const IDLE=['운명의 자리 뽑기, 준비되셨나요?','오늘 뽑은 자리가 한 달을 좌우합니다. 아마도요.','결과에 대한 항의는 받지 않습니다. 추첨기가 했어요.','짝꿍 운, 지금 시험해 보세요.','선생님은 버튼만 눌렀습니다. 진짜로요.'];
+const CHURN=['추첨기 돌아가는 중… 덜컹덜컹','공정성 100%, 선생님 개입 0%','짝꿍 운을 골고루 섞는 중…','교탁 앞자리의 주인공을 찾는 중…','숨 참으세요… 아직 아닙니다…'];
+const END=['추첨 완료! 새 짝꿍에게 3초간 정중히 인사하세요.','자리는 바뀌어도 숙제는 그대로입니다.','이의 신청은 칠판 구석에 적어 주세요. (안 읽음)','축하합니다! 모두 당첨입니다. 자리에요.','새 자리에서 새 마음으로. 졸음은 두고 오세요.'];
+function reaction(k){
+  const [r,c]=parseKey(k);const C=cols();
+  if(r===0)return pick(['선생님 레이더 범위 안입니다','교탁 직관석!','필기 잘 보이는 자리 당첨']);
+  if(r===S.rows-1)return pick(['뒷자리의 여유…','교실 전망대 입성','뒷문과 가까운 자리네요']);
+  if(S.windowSide!=='none'&&(S.windowSide==='left'?c===0:c===C-1))return pick(['광합성 가능 구역','창밖 구경은 쉬는 시간에만','햇살 맛집']);
+  return pick(['오, 괜찮은 자리!','무난하게 평화로운 자리','이 자리에서 전설이 시작됩니다','좋은 자리 같은데요?']);
+}
+
+/* ---------------- sound ---------------- */
+const Sound={on:true,ctx:null,
+  init(){if(!this.ctx){try{this.ctx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(this.ctx&&this.ctx.state==='suspended')this.ctx.resume()},
+  beep(f,d,type='square',v=.03,t0=0){if(!this.on||!this.ctx)return;const c=this.ctx,o=c.createOscillator(),g=c.createGain(),t=c.currentTime+t0;o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+d+.03)},
+  tick(){this.beep(620+Math.random()*520,.06,'square',.025)},
+  rattle(){this.beep(140+Math.random()*90,.04,'square',.018)},
+  fanfare(){[523,659,784,1047].forEach((f,i)=>this.beep(f,.28,'triangle',.07,i*.12));this.beep(1047,.6,'triangle',.06,.5)}
+};
+
+/* ---------------- drum (lottery machine) ---------------- */
+const BALL_COLORS=['#f3d46a','#f2a0ad','#94cbe8','#a3dbb7','#f1efe6','#f6b97a'];
+class Drum{
+  constructor(cv){this.cv=cv;this.ctx=cv.getContext('2d');this.balls=[];this.popped=[];this.churning=false;this.angle=0;this.resize();let raf=0;new ResizeObserver(()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>this.resize())}).observe(cv);const loop=()=>{if(!REDUCED||this.churning||this.popped.length)this.step();this.draw();requestAnimationFrame(loop)};requestAnimationFrame(loop)}
+  resize(){const r=this.cv.getBoundingClientRect();if(!r.width||(r.width===this.w&&r.height===this.h))return;const d=window.devicePixelRatio||1;this.w=r.width;this.h=r.height;this.cv.width=r.width*d;this.cv.height=r.height*d;this.ctx.setTransform(d,0,0,d,0,0);this.cx=this.w/2;this.cy=this.h/2-6;this.R=Math.min(this.w,this.h)/2-16;if(this.nums)this.setBalls(this.nums)}
+  setBalls(nums){this.nums=nums.slice();const n=Math.max(nums.length,1);this.br=clamp(this.R*.62/Math.sqrt(n),6,15);this.balls=nums.map(num=>{const a=Math.random()*Math.PI*2,d=Math.random()*(this.R-this.br*2);return{num,x:this.cx+Math.cos(a)*d,y:this.cy+Math.sin(a)*d,vx:0,vy:0,c:BALL_COLORS[num%BALL_COLORS.length]}})}
+  pop(num){const i=this.balls.findIndex(b=>b.num===num);if(i<0)return;const b=this.balls.splice(i,1)[0];b.vy=-4.5;b.a=1;this.popped.push(b);this.nums=this.nums.filter(n=>n!==num)}
+  step(){
+    const R=this.R,br=this.br,cx=this.cx,cy=this.cy;
+    for(const b of this.balls){
+      b.vy+=.28;
+      if(this.churning){const dx=b.x-cx,dy=b.y-cy,d=Math.hypot(dx,dy)||1;b.vx+=-dy/d*.8+(Math.random()-.5)*1.8;b.vy+=dx/d*.8+(Math.random()-.5)*1.8-.2}
+      b.vx*=.985;b.vy*=.985;b.x+=b.vx;b.y+=b.vy;
+      const dx=b.x-cx,dy=b.y-cy,d=Math.hypot(dx,dy);
+      if(d>R-br){const nx=dx/d,ny=dy/d;b.x=cx+nx*(R-br);b.y=cy+ny*(R-br);const vn=b.vx*nx+b.vy*ny;if(vn>0){b.vx-=1.7*vn*nx;b.vy-=1.7*vn*ny}}
+    }
+    const B=this.balls,m=2*br;
+    for(let i=0;i<B.length;i++)for(let j=i+1;j<B.length;j++){const a=B[i],b=B[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);if(d<m&&d>0){const nx=dx/d,ny=dy/d,o=(m-d)/2;a.x-=nx*o;a.y-=ny*o;b.x+=nx*o;b.y+=ny*o;const rv=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;if(rv<0){const J=-.9*rv;a.vx-=J*nx;a.vy-=J*ny;b.vx+=J*nx;b.vy+=J*ny}}}
+    for(const p of this.popped){p.y+=p.vy;p.vy-=.18;p.a-=.03}
+    this.popped=this.popped.filter(p=>p.a>0);
+    this.angle+=this.churning?.14:.004;
+  }
+  ball(b,alpha){const c=this.ctx;c.globalAlpha=alpha;c.beginPath();c.arc(b.x,b.y,this.br,0,Math.PI*2);c.fillStyle=b.c;c.fill();c.lineWidth=1;c.strokeStyle='rgba(0,0,0,.18)';c.stroke();c.fillStyle='#23352c';c.font=`${Math.round(this.br*1.05)}px Jua, "Malgun Gothic", sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText(b.num,b.x,b.y+1);c.globalAlpha=1}
+  draw(){
+    const c=this.ctx;if(!this.w)return;c.clearRect(0,0,this.w,this.h);
+    const {cx,cy,R}=this;
+    c.strokeStyle='rgba(238,240,230,.14)';c.lineWidth=2;
+    for(let i=0;i<6;i++){const a=this.angle+i*Math.PI/3;c.beginPath();c.moveTo(cx,cy);c.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);c.stroke()}
+    c.strokeStyle='rgba(238,240,230,.85)';c.lineWidth=3;c.beginPath();c.arc(cx,cy,R+2,0,Math.PI*2);c.stroke();
+    c.strokeStyle='rgba(238,240,230,.3)';c.lineWidth=1.5;c.beginPath();c.arc(cx+1.5,cy-1,R+5,0,Math.PI*2);c.stroke();
+    c.fillStyle='rgba(238,240,230,.85)';c.fillRect(cx-6,cy+R+2,12,10);c.fillRect(cx-28,cy+R+11,56,4);
+    for(const b of this.balls)this.ball(b,1);
+    for(const p of this.popped)this.ball(p,Math.max(p.a,0));
+  }
+}
+const drum=new Drum($('#drum'));
+
+/* ---------------- confetti ---------------- */
+function confetti(){
+  if(REDUCED)return;
+  const cv=$('#confetti'),c=cv.getContext('2d'),d=window.devicePixelRatio||1;
+  cv.width=innerWidth*d;cv.height=innerHeight*d;c.setTransform(d,0,0,d,0,0);
+  const P=Array.from({length:160},()=>({x:innerWidth/2+(Math.random()-.5)*innerWidth*.5,y:innerHeight*.35,vx:(Math.random()-.5)*14,vy:-Math.random()*13-4,r:Math.random()*6,vr:(Math.random()-.5)*.4,w:6+Math.random()*6,h:8+Math.random()*8,col:pick(BALL_COLORS.concat(['#2f6b4f','#d9467e']))}));
+  const t0=performance.now();
+  (function f(t){c.clearRect(0,0,innerWidth,innerHeight);for(const p of P){p.vy+=.35;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;c.save();c.translate(p.x,p.y);c.rotate(p.r);c.fillStyle=p.col;c.fillRect(-p.w/2,-p.h/2,p.w,p.h*Math.abs(Math.cos(p.r*2)));c.restore()}if(t-t0<2800)requestAnimationFrame(f);else c.clearRect(0,0,innerWidth,innerHeight)})(t0);
+}
+
+/* ---------------- toast ---------------- */
+let toastT;
+function toast(msg,kind){const t=$('#toast');t.textContent=msg;t.className='show'+(kind==='err'?' err':'');clearTimeout(toastT);toastT=setTimeout(()=>t.className='',kind==='err'?4200:2800)}
+
+/* ---------------- render: side ---------------- */
+function renderSide(){
+  $('#totalOut').textContent=S.total+'번';
+  const ex=$('#exIn');if(document.activeElement!==ex)ex.value=S.excluded.join(', ');
+  const n=students().length;$('#rosterCount').textContent=n+'명';
+  renderRoster();
+  $('#rowsOut').textContent=S.rows+'줄';$('#groupsOut').textContent=S.groups+'분단';
+  document.querySelectorAll('#perSeg button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===S.per)));
+  document.querySelectorAll('#winSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===S.windowSide)));
+  document.querySelectorAll('#viewSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===S.view)));
+  $('#emptyBack').checked=S.emptyBack;
+  const seats=enabledKeys().length,diff=seats-n;
+  $('#seatStats').innerHTML=`<span class="pill">학생 ${n}명</span><span class="pill">책상 ${seats}개</span>`+(diff>=0?`<span class="pill ok">빈자리 ${diff}개</span>`:`<span class="pill bad">책상 ${-diff}개 부족</span> <button class="btn sm" type="button" id="autoRows">줄 늘려서 맞추기</button>`);
+  const wi=$('#wishIn');if(document.activeElement!==wi)wi.value=S.wish.join(', ');
+  $('#wishChips').innerHTML=S.wish.map(n=>`<span class="chip">${esc(who(n))}<button type="button" data-unwish="${n}" aria-label="${n}번 희망 취소">×</button></span>`).join('');
+  const pins=Object.entries(S.pins).sort((a,b)=>a[0]<b[0]?-1:1);
+  $('#pinChips').innerHTML=pins.length?pins.map(([k,n])=>`<span class="chip">${esc(seatDesc(k))} · ${esc(who(n))}<button type="button" data-unpin="${k}" aria-label="지정 취소">×</button></span>`).join(''):'<span class="hint" style="margin:0">지정된 자리가 없어요.</span>';
+  $('#titleIn').value=S.title;
+  $('#stamp').hidden=!S.locked;
+  $('#lockBtn').textContent=S.locked?'잠금 풀기':'확정하기';
+  $('#drawBtn').disabled=S.locked||animating;
+  $('#drawBtn').textContent=animating?'추첨 중…':(S.assign?'다시 뽑기!':'자리 뽑기!');
+  updateUndo();
+}
+function renderRoster(){
+  const box=$('#roster');if(box.contains(document.activeElement))return;
+  const ex=new Set(S.excluded);let h='';
+  for(let n=1;n<=S.total;n++)h+=`<div class="rrow${ex.has(n)?' ex':''}"><button class="rnum" type="button" data-toggle="${n}" title="${ex.has(n)?'다시 포함하기':'없는 번호로 빼기'}">${n}</button><input data-name="${n}" value="${esc(S.names[n]||'')}" placeholder="이름" aria-label="${n}번 이름"></div>`;
+  box.innerHTML=h;
+}
+
+/* ---------------- render: room ---------------- */
+function deskInner(k){
+  if(isOff(k))return mode==='layout'?'<span class="addmark"><b>+</b>책상 놓기</span>':'';
+  if(mode==='wish'&&rowOf(k)<2){const p=S.pins[k];return `<span class="wl">${p&&nameOf(p)?esc(nameOf(p)):'희망 번호'}</span><input class="pin-in" type="number" inputmode="numeric" min="1" data-pin="${k}" value="${p??''}" aria-label="${esc(seatDesc(k))} 희망 번호">`}
+  if(pending.has(k))return '<span class="num">?</span>';
+  const n=S.assign?S.assign[k]:undefined;
+  if(n!=null){const tag=S.pins[k]===n?'<span class="tag">지정</span>':(S.wish.includes(n)&&rowOf(k)<2?'<span class="tag">희망</span>':'');return `${tag}<span class="num">${n}</span>`+(nameOf(n)?`<span class="nm${nameOf(n).length>5?' long':''}">${esc(nameOf(n))}</span>`:'')}
+  if(S.assign)return '<span class="faint">빈자리</span>';
+  const p=S.pins[k];if(p)return `<span class="tag">지정</span><span class="num" style="opacity:.45">${p}</span>`;
+  return '';
+}
+function deskClass(k){
+  const c=['desk'];if(isOff(k))c.push('off');if(rowOf(k)<2)c.push('front');
+  if(pending.has(k))c.push('pending');
+  else if(S.assign){if(S.assign[k]==null&&!isOff(k))c.push('empty')}else c.push('blank');
+  if(selected&&selected.type==='seat'&&selected.key===k)c.push('sel');
+  if(mode==='wish'&&rowOf(k)>=2)c.push('dim');
+  return c.join(' ');
+}
+function displayCols(){const C=cols(),a=[...Array(C).keys()];return S.view==='teacher'?a.reverse():a}
+function displayRows(){const a=[...Array(S.rows).keys()];return S.view==='teacher'?a.reverse():a}
+function renderRoom(){
+  const room=$('#room');const C=cols();const teacher=S.view==='teacher';
+  const winDisp=S.windowSide==='none'?'none':((S.windowSide==='left')!==teacher?'left':'right');
+  room.className=`room mode-${mode}${teacher?' teacher':''}${winDisp!=='none'?' win-'+winDisp:''}`;
+  const dc=displayCols(),dr=displayRows();
+  // grid template: row label + desks with aisles between groups
+  const tpl=['auto'];const colIndex=[];let gi=2;
+  dc.forEach((c,i)=>{if(i>0&&groupOf(c)!==groupOf(dc[i-1])){tpl.push('var(--aisle)');gi++}tpl.push('var(--dw)');colIndex.push(gi);gi++});
+  let h='';
+  // group labels
+  const glabels=[];dc.forEach((c,i)=>{if(i===0||groupOf(c)!==groupOf(dc[i-1]))glabels.push({g:groupOf(c),start:colIndex[i]})});
+  h+=`<div style="grid-row:1;grid-column:1"></div>`;
+  glabels.forEach(g=>{h+=`<div class="glabel" style="grid-row:1;grid-column:${g.start} / span ${S.per}">${g.g+1}분단</div>`});
+  dr.forEach((r,ri)=>{
+    const gr=ri+2;
+    h+=`<div class="rlabel${r<2?' front':''}" style="grid-row:${gr};grid-column:1">${r+1}줄</div>`;
+    dc.forEach((c,i)=>{const k=keyOf(r,c);h+=`<div class="${deskClass(k)}" data-key="${k}"${isOff(k)&&mode!=='layout'?'':' tabindex="0" role="button"'} aria-label="${esc(seatDesc(k))}" style="grid-row:${gr};grid-column:${colIndex[i]}">${deskInner(k)}</div>`});
+  });
+  const podium='<div class="podium">교탁</div>';
+  room.innerHTML=(winDisp!=='none'?'<div class="window"><span>창문</span></div>':'')+(teacher?'':podium)+`<div class="grid" style="grid-template-columns:${tpl.join(' ')}">${h}</div>`+(teacher?podium:'');
+  fitRoom();
+  renderNotes();
+}
+function fitRoom(){
+  const room=$('#room');const C=cols();const aisles=S.groups-1;
+  const pad=parseFloat(getComputedStyle(room).paddingLeft)+parseFloat(getComputedStyle(room).paddingRight);
+  const avail=room.clientWidth-pad-40;
+  let dw=(avail-C*4)/(C+aisles*.4);dw=clamp(Math.floor(dw),58,132);
+  const dh=clamp(Math.round(dw*.62),44,76);
+  if(room.style.getPropertyValue('--dw')===dw+'px')return;room.style.setProperty('--dw',dw+'px');room.style.setProperty('--dh',dh+'px');room.style.setProperty('--aisle',Math.round(dw*.4)+'px');
+}
+let roomW=0,fitRaf=0;
+new ResizeObserver(entries=>{const w=Math.round(entries[0].contentRect.width);if(w===roomW)return;roomW=w;cancelAnimationFrame(fitRaf);fitRaf=requestAnimationFrame(fitRoom)}).observe($('#room'));
+
+function renderNotes(){
+  const note=$('#modeNote');
+  if(mode==='layout'){note.hidden=false;note.innerHTML='<span class="grow"><b>책상 편집 중</b> · 책상을 누르면 없애고, 점선 칸(+ 책상 놓기)을 누르면 다시 놓아요. 줄과 분단 수는 왼쪽에서 바꿔요.</span><button class="btn sm" type="button" data-mode-go="seat">편집 끝내기</button>'}
+  else if(mode==='wish'){note.hidden=false;note.innerHTML='<span class="grow"><b>앞자리 희망 적기</b> · 앞 두 줄 책상에 학생 번호를 적으면 뽑을 때 그 자리에 고정돼요. 지우면 취소돼요.</span><button class="btn sm" type="button" data-mode-go="seat">다 적었어요</button>'}
+  else note.hidden=true;
+  // selection bar
+  const bar=$('#selBar');
+  if(mode==='seat'&&selected&&S.assign){
+    const n=selected.type==='seat'?S.assign[selected.key]:selected.num;
+    const opts=students().map(s=>`<option value="${s.num}"${s.num===n?' selected':''}>${esc(who(s.num))}${seatOf(s.num)?'':' (자리 없음)'}</option>`).join('');
+    const head=selected.type==='seat'?(n!=null?`<b>${esc(who(n))}</b> · ${esc(seatDesc(selected.key))}`:`<b>빈자리</b> · ${esc(seatDesc(selected.key))}`):`<b>${esc(who(n))}</b> · 자리 없음`;
+    bar.hidden=false;
+    bar.innerHTML=`<span class="grow">${head}<br><small style="color:var(--muted)">다른 책상을 누르면 서로 자리를 바꿔요.</small></span>`+(selected.type==='seat'?`<select class="input" id="selPick" aria-label="이 자리에 앉힐 학생"><option value="">이 자리에 앉힐 학생…</option>${opts}</select>`+(n!=null?'<button class="btn sm" type="button" id="selClear">자리 비우기</button>':''):'')+'<button class="btn sm" type="button" id="selCancel">선택 취소</button>';
+  }else bar.hidden=true;
+  // tray
+  const tray=$('#trayBar');
+  if(S.assign&&!pending.size){
+    const placed=new Set(Object.values(S.assign));const left=students().filter(s=>!placed.has(s.num));
+    if(left.length){tray.hidden=false;tray.innerHTML=`<div class="tray"><span class="lbl">자리 없는 학생 ${left.length}명</span>${left.map(s=>`<button type="button" class="tchip${selected&&selected.type==='tray'&&selected.num===s.num?' sel':''}" data-tray="${s.num}">${esc(who(s.num))}</button>`).join('')}<span class="hint" style="margin:0">눌러서 고른 뒤 책상을 누르거나, 책상으로 끌어 놓으세요.</span></div>`}
+    else tray.hidden=true;
+  }else tray.hidden=true;
+}
+
+/* ---------------- fortune ---------------- */
+function renderFortune(){
+  const box=$('#fortune');
+  if(!S.assign||pending.size||!Object.keys(S.assign).length){box.hidden=true;return}
+  const C=cols(),used=new Set(),cards=[];
+  const filled=Object.keys(S.assign);
+  const nearest=(cands,score)=>{let best=null,bs=1e9;for(const k of cands){if(used.has(S.assign[k]))continue;const s=score(k);if(s<bs){bs=s;best=k}}return best};
+  const add=(k,eyebrow,text)=>{if(!k)return;used.add(S.assign[k]);cards.push({k,eyebrow,text})};
+  const mid=(C-1)/2;
+  add(nearest(filled,k=>{const [r,c]=parseKey(k);return r*100+Math.abs(c-mid)}),'교탁 바로 앞 VIP석','선생님과 눈맞춤 무제한 이용권 획득. 졸면 1초 만에 들킵니다.');
+  if(S.windowSide!=='none'){const wc=S.windowSide==='left'?0:C-1;add(nearest(filled,k=>{const [r,c]=parseKey(k);return (S.rows-1-r)*100+Math.abs(c-wc)*10}),'창가 뒷자리 광합성석','햇빛 충전은 완벽. 대신 블라인드 담당으로 임명합니다.')}
+  else add(nearest(filled,k=>{const [r,c]=parseKey(k);return (S.rows-1-r)*100+Math.min(c,C-1-c)}),'맨 뒤 구석 전망대','교실 전체가 한눈에 보여요. 선생님도 한눈에 봅니다.');
+  add(nearest(filled,k=>{const [r,c]=parseKey(k);return Math.abs(r-(S.rows-1)/2)*10+Math.abs(c-mid)}),'교실의 배꼽','사방에서 다 보이는 자리. 표정 관리 필수입니다.');
+  if(S.per>=2){
+    const groups={};filled.forEach(k=>{const [r,c]=parseKey(k);const g=r+'-'+groupOf(c);(groups[g]=groups[g]||[]).push(k)});
+    const pairs=shuffle(Object.values(groups).filter(a=>a.length>=2&&a.every(k=>!used.has(S.assign[k]))));
+    if(pairs.length){const p=pairs[0].sort();const names=p.map(k=>who(S.assign[k]));p.forEach(k=>used.add(S.assign[k]));cards.push({k:p[0],pair:names,eyebrow:'오늘의 케미 짝꿍',text:pick(['지우개를 서로 빌려줄 운명입니다.','조별 과제 최강 조합 예감.','싸우면 둘 다 청소 당번. (농담)'])})}
+  }else add(nearest(shuffle(filled.slice()),()=>0),'자유로운 영혼석','짝은 없지만 팔꿈치 공간이 두 배입니다.');
+  $('#fcards').innerHTML=cards.map(c=>`<article class="fcard"><span class="eyebrow">${esc(c.eyebrow)}</span><span class="who">${c.pair?c.pair.map(esc).join(' &amp; '):esc(who(S.assign[c.k]))}</span><span class="where">${esc(seatDesc(c.k).replace(/ (왼쪽|오른쪽|가운데)$/,''))}</span><p>${esc(c.text)}</p></article>`).join('');
+  box.hidden=false;
+}
+
+function renderAll(){renderSide();renderRoom();renderFortune()}
+function setBoard(msg,sub){$('#boardMsg').textContent=msg;if(sub!==undefined)$('#boardSub').innerHTML=sub}
+
+/* ---------------- draw ---------------- */
+function computeAssign(){
+  const studs=students().map(s=>s.num),set=new Set(studs),seats=enabledKeys();
+  if(!studs.length)return{error:'학생이 한 명도 없어요. 총 인원을 확인해 주세요.'};
+  if(seats.length<studs.length)return{error:`책상이 ${studs.length-seats.length}개 부족해요. 줄이나 분단을 늘려 주세요.`};
+  const assign={},placed=new Set();
+  for(const [k,n] of Object.entries(S.pins))if(set.has(n)&&!isOff(k)&&!placed.has(n)&&assign[k]==null){assign[k]=n;placed.add(n)}
+  const wishers=shuffle(S.wish.filter(n=>set.has(n)&&!placed.has(n)));
+  const front=shuffle(seats.filter(k=>rowOf(k)<2&&assign[k]==null));
+  let overflow=0;
+  wishers.forEach((n,i)=>{if(i<front.length){assign[front[i]]=n;placed.add(n)}else overflow++});
+  const rest=shuffle(studs.filter(n=>!placed.has(n)));
+  let free=shuffle(seats.filter(k=>assign[k]==null));
+  if(S.emptyBack)free=free.map((k,i)=>({k,i})).sort((a,b)=>rowOf(a.k)-rowOf(b.k)||a.i-b.i).map(o=>o.k);
+  rest.forEach((n,i)=>{assign[free[i]]=n});
+  return{assign,overflow};
+}
+let skipFns=[],skipping=false;
+const sleep=ms=>new Promise(res=>{if(skipping)return res();const t=setTimeout(res,ms);skipFns.push(()=>{clearTimeout(t);res()})});
+function doSkip(){skipping=true;skipFns.forEach(f=>f());skipFns=[]}
+
+async function draw(){
+  if(animating)return;
+  if(S.locked){toast('확정된 자리예요. 다시 뽑으려면 잠금을 풀어 주세요.','err');return}
+  sanitize();
+  const res=computeAssign();
+  if(res.error){toast(res.error,'err');return}
+  Sound.init();
+  pushUndo();
+  selected=null;if(mode!=='seat')setMode('seat',true);
+  S.assign=res.assign;S.drawnAt=Date.now();S.removedFrom={};
+  animating=true;skipping=false;document.body.classList.add('busy');
+  $('#skipBtn').hidden=false;
+  pending=new Set(Object.keys(S.assign));
+  renderSide();renderRoom();renderFortune();
+  drum.setBalls(Object.values(S.assign));drum.churning=true;
+  let ci=0;setBoard(CHURN[0],'');
+  const rattle=setInterval(()=>Sound.rattle(),75);
+  const msgT=setInterval(()=>setBoard(CHURN[++ci%CHURN.length]),650);
+  await sleep(REDUCED?400:1900);
+  clearInterval(rattle);clearInterval(msgT);
+  const A=S.assign;
+  const order=shuffle(Object.keys(A));
+  const per=clamp(3600/order.length,55,160);
+  const room=$('#room');
+  try{
+  for(let i=0;i<order.length;i++){
+    if(skipping||S.assign!==A)break;
+    const k=order[i],n=A[k];
+    pending.delete(k);drum.pop(n);
+    const el=room.querySelector(`[data-key="${k}"]`);
+    if(el){el.className=deskClass(k)+' pop';el.innerHTML=deskInner(k)}
+    Sound.tick();
+    setBoard(i>order.length-4?'마지막… 두구두구두구':CHURN[1+(i>>3)%(CHURN.length-1)],`<b>${esc(who(n))}</b> → ${esc(seatDesc(k))} · ${esc(reaction(k))}`);
+    await sleep(per);
+  }
+  }catch(err){console.error(err)}
+  drum.churning=false;pending.clear();skipFns=[];skipping=false;
+  drum.setBalls(students().map(s=>s.num));
+  animating=false;document.body.classList.remove('busy');$('#skipBtn').hidden=true;
+  renderAll();
+  setBoard(pick(END),`${students().length}명 배정 완료 · 책상을 끌거나 두 자리를 차례로 눌러 바꿀 수 있어요.`);
+  Sound.fanfare();confetti();save();
+  if(res.overflow)toast(`앞자리 희망자가 많아서 ${res.overflow}명은 일반 추첨으로 넘어갔어요.`,'err');
+}
+
+/* ---------------- moves ---------------- */
+function placeTo(src,dst){
+  if(!S.assign)S.assign={};
+  if(src.type==='seat'&&src.key===dst)return;
+  pushUndo();
+  if(src.type==='seat'){const a=S.assign[src.key],b=S.assign[dst];if(a!=null)S.assign[dst]=a;else delete S.assign[dst];if(b!=null)S.assign[src.key]=b;else delete S.assign[src.key]}
+  else{const old=seatOf(src.num);const b=S.assign[dst];if(old)delete S.assign[old];S.assign[dst]=src.num;if(b!=null&&old)S.assign[old]=b}
+  selected=null;save();renderRoom();renderFortune();
+}
+function clickSeat(k){
+  if(isOff(k))return;
+  if(!S.assign){toast('먼저 자리 뽑기를 눌러 주세요.');return}
+  if(S.locked){toast('확정된 자리예요. 바꾸려면 잠금을 풀어 주세요.');return}
+  if(!selected){selected={type:'seat',key:k}}
+  else if(selected.type==='seat'&&selected.key===k){selected=null}
+  else{placeTo(selected,k);return}
+  renderRoom();
+}
+
+/* pointer drag & drop (mouse + touch) */
+let drag=null;
+function startDrag(e,src,el){if(e.button>0)return;drag={src,el,x:e.clientX,y:e.clientY,started:false,ghost:null,target:null}}
+document.addEventListener('pointerdown',e=>{
+  if(animating||S.locked||mode!=='seat'||!S.assign)return;
+  const t=e.target.closest('.tchip');if(t){startDrag(e,{type:'tray',num:+t.dataset.tray},t);return}
+  const d=e.target.closest('#room .desk');if(d&&!isOff(d.dataset.key)&&S.assign[d.dataset.key]!=null)startDrag(e,{type:'seat',key:d.dataset.key},d);
+});
+document.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  if(!drag.started){if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<7)return;drag.started=true;const g=drag.el.cloneNode(true);g.classList.add('ghost');g.classList.remove('sel','pop');const r=drag.el.getBoundingClientRect();g.style.width=r.width+'px';g.style.height=r.height+'px';const room=$('#room');g.style.setProperty('--dw',room.style.getPropertyValue('--dw'));g.style.setProperty('--dh',room.style.getPropertyValue('--dh'));document.body.appendChild(g);drag.ghost=g;drag.el.classList.add('dragging')}
+  e.preventDefault();
+  drag.ghost.style.left=e.clientX+'px';drag.ghost.style.top=e.clientY+'px';
+  const under=document.elementFromPoint(e.clientX,e.clientY);const tg=under&&under.closest('#room .desk');
+  const k=tg&&!isOff(tg.dataset.key)?tg.dataset.key:null;
+  if(drag.target!==k){document.querySelectorAll('.desk.target').forEach(x=>x.classList.remove('target'));drag.target=k;if(k&&!(drag.src.type==='seat'&&drag.src.key===k))tg.classList.add('target')}
+},{passive:false});
+function endDrag(e,cancel){
+  if(!drag)return;const d=drag;drag=null;
+  if(d.started){d.ghost.remove();d.el.classList.remove('dragging');document.querySelectorAll('.desk.target').forEach(x=>x.classList.remove('target'));if(!cancel&&d.target){placeTo(d.src,d.target);Sound.init();Sound.tick()}d.el.dataset.dragged='1';setTimeout(()=>{delete d.el.dataset.dragged},0)}
+}
+document.addEventListener('pointerup',e=>endDrag(e,false));
+document.addEventListener('pointercancel',e=>endDrag(e,true));
+
+/* ---------------- events ---------------- */
+$('#room').addEventListener('click',e=>{
+  if(animating)return;
+  const d=e.target.closest('.desk');if(!d||d.dataset.dragged)return;
+  const k=d.dataset.key;
+  if(mode==='layout'){
+    if(S.locked){toast('확정된 상태에서는 책상을 바꿀 수 없어요.');return}
+    S.removedFrom=S.removedFrom||{};
+    if(isOff(k)){S.disabled=S.disabled.filter(x=>x!==k);const n=S.removedFrom[k];delete S.removedFrom[k];if(S.assign&&n!=null&&studentSet().has(n)&&!seatOf(n)){S.assign[k]=n;toast(`${who(n)} 학생을 원래 자리로 돌려놓았어요.`)}}
+    else{S.disabled.push(k);if(S.assign&&S.assign[k]!=null){pushUndo();S.removedFrom[k]=S.assign[k];delete S.assign[k];toast(`${who(S.removedFrom[k])} 학생은 '자리 없는 학생' 목록으로 옮겼어요.`)}delete S.pins[k]}
+    save();renderAll();return;
+  }
+  if(mode==='wish'){if(rowOf(k)<2){const inp=d.querySelector('.pin-in');if(inp&&e.target!==inp)inp.focus()}return}
+  clickSeat(k);
+});
+$('#room').addEventListener('change',e=>{
+  const inp=e.target.closest('.pin-in');if(!inp)return;
+  const k=inp.dataset.pin,v=parseInt(inp.value,10);
+  if(!inp.value.trim()||isNaN(v)){delete S.pins[k]}
+  else if(!studentSet().has(v)){toast(`${v}번은 명단에 없는 번호예요.`,'err');inp.value=S.pins[k]??'';return}
+  else{for(const kk in S.pins)if(S.pins[kk]===v&&kk!==k){delete S.pins[kk];toast(`${who(v)}의 이전 지정 자리를 옮겼어요.`)}S.pins[k]=v}
+  save();renderSide();
+  const d=inp.closest('.desk');const ae=document.activeElement;d.innerHTML=deskInner(k);
+  // keep the room's other inputs intact; refresh moved pins
+  document.querySelectorAll('#room .pin-in').forEach(x=>{if(x.dataset.pin!==k)x.value=S.pins[x.dataset.pin]??''});
+  if(ae===inp){const ni=d.querySelector('.pin-in');ni&&ni.focus()}
+});
+$('#room').addEventListener('keydown',e=>{const inp=e.target.closest('.pin-in');if(inp){if(e.key==='Enter')inp.blur();return}
+  const d=e.target.closest('.desk');if(d&&(e.key==='Enter'||e.key===' ')){e.preventDefault();const k=d.dataset.key;d.click();const nd=document.querySelector(`#room [data-key="${k}"]`);nd&&nd.focus()}});
+
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)setMode(b.dataset.mode)});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-mode-go]');if(b)setMode(b.dataset.modeGo)});
+function setMode(m,silent){mode=m;selected=null;document.querySelectorAll('#tabs [data-mode]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.mode===m)));if(!silent)renderRoom()}
+
+$('#selBar').addEventListener('click',e=>{
+  if(e.target.id==='selCancel'){selected=null;renderRoom()}
+  if(e.target.id==='selClear'&&selected&&selected.type==='seat'){pushUndo();delete S.assign[selected.key];selected=null;save();renderRoom();renderFortune()}
+});
+$('#selBar').addEventListener('change',e=>{
+  if(e.target.id!=='selPick'||!selected)return;const n=+e.target.value;if(!n)return;
+  const from=seatOf(n);if(from===selected.key)return;
+  if(from)placeTo({type:'seat',key:from},selected.key);else placeTo({type:'tray',num:n},selected.key);
+});
+$('#trayBar').addEventListener('click',e=>{
+  const t=e.target.closest('[data-tray]');if(!t||t.dataset.dragged||S.locked)return;const n=+t.dataset.tray;
+  if(selected&&selected.type==='seat'){placeTo({type:'tray',num:n},selected.key);return}
+  selected=(selected&&selected.type==='tray'&&selected.num===n)?null:{type:'tray',num:n};renderRoom();
+});
+
+$('#drawBtn').addEventListener('click',draw);
+$('#skipBtn').addEventListener('click',doSkip);
+$('#lockBtn').addEventListener('click',()=>{
+  if(!S.locked&&!S.assign){toast('먼저 자리를 뽑아 주세요.');return}
+  S.locked=!S.locked;selected=null;save();renderAll();
+  if(S.locked){setBoard('자리 확정! 이제 바꿔 달라고 해도 소용없습니다.','PDF 저장이나 인쇄로 결과를 남겨 두세요.');Sound.init();Sound.fanfare()}
+  else setBoard('잠금을 풀었어요. 자리를 다시 고칠 수 있어요.','');
+});
+$('#undoBtn').addEventListener('click',undo);
+function undo(){if(!undoStack.length||S.locked||animating)return;S.assign=JSON.parse(undoStack.pop());selected=null;sanitize();save();renderAll();toast('한 단계 되돌렸어요.')}
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){e.preventDefault();undo()}
+  if(e.key==='Escape'&&selected){selected=null;renderRoom()}
+});
+
+$('#viewSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.view=b.dataset.v;save();renderSide();renderRoom()});
+$('#perSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||S.locked)return;const v=+b.dataset.v;if(v===S.per)return;
+  // keep the total number of desk columns roughly the same
+  const C=cols();S.per=v;S.groups=clamp(Math.round(C/v),1,10);S.disabled=[];S.pins={};if(S.assign){pushUndo();S.assign=null}
+  ensureSeats();sanitize();save();renderAll();toast('짝 설정을 바꿔서 책상을 다시 놓았어요.')});
+$('#winSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.windowSide=b.dataset.v;save();renderAll()});
+$('#emptyBack').addEventListener('change',e=>{S.emptyBack=e.target.checked;save()});
+
+document.addEventListener('click',e=>{
+  if(animating)return;
+  const s=e.target.closest('[data-step]');
+  if(s){if(S.locked){toast('확정을 풀어야 인원이나 책상을 바꿀 수 있어요.');return}
+    const d=+s.dataset.d,f=s.dataset.step;
+    if(f==='total')S.total=clamp(S.total+d,1,60);
+    if(f==='rows')S.rows=clamp(S.rows+d,1,12);
+    if(f==='groups')S.groups=clamp(S.groups+d,1,10);
+    sanitize();save();renderAll();return}
+  if(e.target.id==='autoRows'){ensureSeats();sanitize();save();renderAll();toast(`${S.rows}줄로 늘렸어요.`);return}
+  const u=e.target.closest('[data-unwish]');if(u){S.wish=S.wish.filter(n=>n!==+u.dataset.unwish);save();renderSide();renderRoom();return}
+  const p=e.target.closest('[data-unpin]');if(p){delete S.pins[p.dataset.unpin];save();renderSide();renderRoom();return}
+  const t=e.target.closest('[data-toggle]');if(t){if(S.locked){toast('확정을 풀어야 명단을 바꿀 수 있어요.');return}const n=+t.dataset.toggle;S.excluded=S.excluded.includes(n)?S.excluded.filter(x=>x!==n):S.excluded.concat(n);sanitize();save();const box=$('#roster');box.innerHTML='';renderAll();return}
+});
+function ensureSeats(){const need=students().length;let guard=0;while(enabledKeys().length<need&&S.rows<12&&guard++<20)S.rows++;while(enabledKeys().length<need&&S.groups<10&&guard++<40)S.groups++}
+const parseNums=s=>{const out=[];String(s).replace(/(\d+)\s*[~\-]\s*(\d+)|(\d+)/g,(m,a,b,c)=>{if(c)out.push(+c);else{let x=+a,y=+b;if(x>y)[x,y]=[y,x];if(y-x<100)for(let i=x;i<=y;i++)out.push(i)}});return out.filter(n=>n>0)};
+$('#exIn').addEventListener('change',e=>{if(S.locked){toast('확정을 풀어야 명단을 바꿀 수 있어요.');e.target.value=S.excluded.join(', ');return}S.excluded=parseNums(e.target.value);sanitize();save();renderAll()});
+$('#wishIn').addEventListener('change',e=>{const set=studentSet();const nums=parseNums(e.target.value);const bad=nums.filter(n=>!set.has(n));S.wish=nums.filter(n=>set.has(n));sanitize();save();e.target.blur();renderAll();if(bad.length)toast(`명단에 없는 번호는 뺐어요: ${bad.join(', ')}`,'err');else{const front=enabledKeys().filter(k=>rowOf(k)<2).length-Object.keys(S.pins).length;if(S.wish.length>front)toast(`앞 두 줄 자리는 ${front}개인데 희망자가 ${S.wish.length}명이에요. 넘치는 학생은 일반 추첨으로 넘어가요.`,'err')}});
+let nameT;
+$('#roster').addEventListener('input',e=>{const i=e.target.closest('[data-name]');if(!i)return;S.names[i.dataset.name]=i.value;clearTimeout(nameT);nameT=setTimeout(()=>{save();renderRoom();renderFortune()},250)});
+$('#titleIn').addEventListener('input',e=>{S.title=e.target.value.trim()||'우리 반';save()});
+
+/* ---------------- excel import ---------------- */
+function parseRoster(wb){
+  let title=null;const found=new Map();
+  const titleRe=/(\d+)\s*학년\s*(\d+)\s*반/;
+  const isNumHead=v=>typeof v==='string'&&/^번호$/.test(v.replace(/\s/g,''));
+  const isNameHead=v=>typeof v==='string'&&/^(성명|이름|학생명|학생이름|성함)$/.test(v.replace(/\s/g,''));
+  const asInt=v=>{if(v==null||v==='')return NaN;const n=Number(String(v).trim());return Number.isInteger(n)?n:NaN};
+  for(const sn of wb.SheetNames){
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,raw:true,blankrows:false});
+    let nc=-1,mc=-1;
+    for(const row of rows){
+      if(!row)continue;
+      if(!title)for(const v of row){if(typeof v==='string'){const m=v.match(titleRe);if(m){title=`${m[1]}학년 ${m[2]}반`;break}}}
+      const a=row.findIndex(isNumHead),b=row.findIndex(isNameHead);
+      if(a>=0&&b>=0){nc=a;mc=b;continue}
+      if(nc>=0){const n=asInt(row[nc]),nm=row[mc];if(n>0&&n<100&&nm!=null&&String(nm).trim())found.set(n,String(nm).trim())}
+    }
+  }
+  if(!found.size){ // fallback: integer cell followed by a name-like cell
+    for(const sn of wb.SheetNames){
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,raw:true,blankrows:false});
+      for(const row of rows){if(!row)continue;for(let i=0;i<row.length-1;i++){const n=asInt(row[i]),nm=row[i+1];if(n>0&&n<100&&typeof nm==='string'&&/^[가-힣A-Za-z][가-힣A-Za-z\s]{1,24}$/.test(nm.trim())&&!found.has(n)){found.set(n,nm.trim());break}}}
+    }
+  }
+  return{title,list:[...found.entries()].map(([num,name])=>({num,name})).sort((a,b)=>a.num-b.num)};
+}
+async function importFile(file){
+  if(!file)return;
+  if(animating){toast('추첨이 끝난 뒤에 불러와 주세요.');return}
+  if(!window.XLSX){toast('엑셀 읽기 도구를 불러오지 못했어요. 인터넷 연결을 확인한 뒤 새로고침해 주세요.','err');return}
+  if(S.locked){toast('확정을 풀어야 명단을 바꿀 수 있어요.','err');return}
+  try{
+    const buf=await file.arrayBuffer();let wb;
+    if(/\.csv$/i.test(file.name)){let text;try{text=new TextDecoder('utf-8',{fatal:true}).decode(buf)}catch(e){text=new TextDecoder('euc-kr').decode(buf)}wb=XLSX.read(text.replace(/^\uFEFF/,''),{type:'string'})}
+    else wb=XLSX.read(buf,{type:'array'});
+    const {title,list}=parseRoster(wb);
+    if(!list.length){toast('번호와 이름을 찾지 못했어요. "번호", "성명" 칸이 있는 출석부인지 확인해 주세요.','err');return}
+    const max=Math.max(...list.map(x=>x.num)),have=new Set(list.map(x=>x.num));
+    S.total=max;S.excluded=[];for(let n=1;n<=max;n++)if(!have.has(n))S.excluded.push(n);
+    S.names={};list.forEach(x=>S.names[x.num]=x.name);
+    if(title)S.title=title;
+    ensureSeats();sanitize();save();$('#roster').innerHTML='';renderAll();
+    setBoard(`${S.title} 명단 도착! ${list.length}명 모두 준비 완료.`,S.excluded.length?`없는 번호 <b>${S.excluded.join(', ')}</b>번은 자동으로 뺐어요.`:'');
+    toast(`${list.length}명의 번호와 이름을 불러왔어요.`);
+  }catch(err){console.error(err);toast('파일을 읽지 못했어요. 엑셀 파일이 맞는지 확인해 주세요.','err')}
+}
+const drop=$('#drop'),fileIn=$('#fileIn');
+drop.addEventListener('click',()=>fileIn.click());
+drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fileIn.click()}});
+fileIn.addEventListener('change',()=>{importFile(fileIn.files[0]);fileIn.value=''});
+['dragenter','dragover'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',e=>importFile(e.dataTransfer.files[0]));
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files[0]&&!drop.contains(e.target))importFile(e.dataTransfer.files[0])});
+
+/* ---------------- print / pdf ---------------- */
+function fmtDate(t){const d=t?new Date(t):new Date();const w='일월화수목금토'[d.getDay()];return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}.(${w})`}
+function buildSheet(){
+  const C=cols(),R=S.rows,teacher=S.view==='teacher',dc=displayCols(),dr=displayRows();
+  const aisles=S.groups-1;const W=1000,H=520;
+  const dw=Math.floor(Math.min(140,(W-C*4-aisles*30)/C));const dh=Math.floor(Math.min(86,(H-(R)*12)/(R+.3)));
+  const tpl=[];const ci=[];let gi=1;
+  dc.forEach((c,i)=>{if(i>0&&groupOf(c)!==groupOf(dc[i-1])){tpl.push('30px');gi++}tpl.push(dw+'px');ci.push(gi);gi++});
+  let g='';
+  dc.forEach((c,i)=>{if(i===0||groupOf(c)!==groupOf(dc[i-1]))g+=`<div class="ps-gl" style="grid-row:1;grid-column:${ci[i]} / span ${S.per}">${groupOf(c)+1}분단</div>`});
+  const nf=Math.round(dw*.26),mf=Math.max(12,Math.min(18,Math.round(dw*.14)));
+  dr.forEach((r,ri)=>dc.forEach((c,i)=>{const k=keyOf(r,c);const n=S.assign?S.assign[k]:null;const cls=isOff(k)?'ps-desk o':(n==null?'ps-desk e':'ps-desk');
+    g+=`<div class="${cls}" style="grid-row:${ri+2};grid-column:${ci[i]};height:${dh}px">${n!=null?`<span class="n" style="font-size:${nf}px">${n}</span>${nameOf(n)?`<span class="m" style="font-size:${mf}px">${esc(nameOf(n))}</span>`:''}`:''}</div>`}));
+  const winDisp=S.windowSide==='none'?'none':((S.windowSide==='left')!==teacher?'left':'right');
+  const podium='<div class="ps-podium">교 탁</div>';
+  const n=students().length;
+  return `<div class="ps-head"><div><div class="ps-title">${esc(S.title)} 자리 배치표${S.locked?'<span class="ps-confirm">확정</span>':''}</div><div class="ps-sub">${teacher?'교사 시점 (교탁에서 바라본 모습)':'학생 시점 (칠판을 바라본 모습)'} · 학생 ${n}명 · ${S.per===1?'혼자 앉기':S.per+'인 짝'}</div></div><div class="ps-date">${fmtDate(S.drawnAt)}</div></div>
+  <div class="ps-body">${winDisp!=='none'?`<div class="ps-win" style="${winDisp}:0"></div>`:''}${teacher?'':podium}<div class="ps-grid" style="grid-template-columns:${tpl.join(' ')};row-gap:12px">${g}</div>${teacher?podium:''}</div>
+  <div class="ps-foot"><span>${winDisp!=='none'?'파란 막대: 창문 쪽':''}</span><span>우리반 자리뽑기 · 공정 추첨기 1호</span></div>`;
+}
+function needResult(){if(!S.assign||!Object.keys(S.assign).length){toast('먼저 자리를 뽑아 주세요.','err');return false}if(animating)return false;return true}
+$('#printBtn').addEventListener('click',()=>{if(!needResult())return;$('#printSheet').innerHTML=buildSheet();setTimeout(()=>window.print(),50)});
+$('#pdfBtn').addEventListener('click',async()=>{
+  if(!needResult())return;
+  if(!window.html2canvas||!window.jspdf){toast('PDF 도구를 불러오지 못했어요. 인터넷 연결을 확인하거나 인쇄 → PDF로 저장을 이용해 주세요.','err');return}
+  const btn=$('#pdfBtn');btn.disabled=true;btn.textContent='만드는 중…';
+  try{
+    const sheet=$('#printSheet');sheet.innerHTML=buildSheet();
+    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    const canvas=await html2canvas(sheet,{scale:2,backgroundColor:'#ffffff',logging:false});
+    const pdf=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    const pw=297,ph=210,m=8,w=pw-m*2,h=w*canvas.height/canvas.width;
+    pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',m,(ph-h)/2,w,h);
+    const d=new Date(S.drawnAt||Date.now());
+    const fname=`${S.title.replace(/\s+/g,'')}_자리배치_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.pdf`;
+    const a=document.createElement('a');a.href=URL.createObjectURL(pdf.output('blob'));a.download=fname;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
+    toast('PDF를 저장했어요.');
+  }catch(err){console.error(err);toast('PDF를 만들지 못했어요. 인쇄 → PDF로 저장을 이용해 주세요.','err')}
+  finally{btn.disabled=false;btn.textContent='PDF 저장'}
+});
+
+/* ---------------- top bar ---------------- */
+$('#soundBtn').addEventListener('click',e=>{Sound.on=!Sound.on;e.currentTarget.setAttribute('aria-pressed',String(Sound.on));e.currentTarget.textContent=Sound.on?'소리 켜짐':'소리 꺼짐'});
+$('#fsBtn').addEventListener('click',()=>{const st=$('#stage');if(document.fullscreenElement)document.exitFullscreen();else if(st.requestFullscreen)st.requestFullscreen().catch(()=>toast('이 브라우저에서는 전체화면을 쓸 수 없어요.'))});
+document.addEventListener('fullscreenchange',()=>{$('#fsBtn').textContent=document.fullscreenElement?'전체화면 끝내기':'전체화면';setTimeout(fitRoom,50)});
+let resetArm=null;
+$('#resetBtn').addEventListener('click',e=>{
+  const b=e.currentTarget;
+  if(animating){toast('추첨이 끝난 뒤에 초기화할 수 있어요.');return}
+  if(!resetArm){b.textContent='정말요? 한 번 더 누르면 초기화';resetArm=setTimeout(()=>{resetArm=null;b.textContent='모두 초기화'},3500);return}
+  clearTimeout(resetArm);resetArm=null;b.textContent='모두 초기화';
+  S=defaults();undoStack=[];selected=null;mode='seat';setMode('seat',true);save();$('#roster').innerHTML='';renderAll();drum.setBalls(students().map(s=>s.num));setBoard(pick(IDLE),'');toast('처음 상태로 돌아왔어요.');
+});
+
+/* ---------------- boot ---------------- */
+sanitize();
+renderAll();
+drum.setBalls(students().map(s=>s.num));
+setBoard(S.assign?'지난번 뽑은 자리를 불러왔어요.':pick(IDLE),S.assign?'다시 뽑으려면 <b>다시 뽑기!</b>를 누르세요.':'출석부 엑셀을 불러오면 번호와 이름이 자동으로 들어가요.');
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{fitRoom()});
+window.__seat={get S(){return S},draw,importFile};
+})();
+</script>
+</body>
+</html>
